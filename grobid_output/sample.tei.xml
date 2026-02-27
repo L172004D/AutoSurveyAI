@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xml:space="preserve" xmlns="http://www.tei-c.org/ns/1.0" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+xsi:schemaLocation="http://www.tei-c.org/ns/1.0 https://raw.githubusercontent.com/kermitt2/grobid/master/grobid-home/schemas/xsd/Grobid.xsd"
+ xmlns:xlink="http://www.w3.org/1999/xlink">
+	<teiHeader xml:lang="en">
+		<fileDesc>
+			<titleStmt>
+				<title level="a" type="main">Running HMC Simulation with Python via QUDA</title>
+				<funder>
+					<orgName type="full">Gauss Centre for Supercomputing e.V.</orgName>
+				</funder>
+				<funder ref="#_bV2yJ8V">
+					<orgName type="full">PRACE-6IP</orgName>
+				</funder>
+				<funder ref="#_cv87KsW">
+					<orgName type="full">PRACE</orgName>
+				</funder>
+			</titleStmt>
+			<publicationStmt>
+				<publisher/>
+				<availability  status="unknown">
+					<licence/>
+				</availability>
+				<date type="published" when="2022-12-13">13 Dec 2022</date>
+			</publicationStmt>
+			<sourceDesc>
+				<biblStruct>
+					<analytic>
+						<author role="corresp">
+							<persName><forename type="first">Shuhei</forename><surname>Yamamoto</surname></persName>
+							<email>s.yamamoto@cyi.ac.cy</email>
+							<affiliation key="aff0">
+								<orgName type="department">Computation-based Science and Technology Research Center</orgName>
+								<orgName type="institution">The Cyprus Institute</orgName>
+								<address>
+									<country key="CY">Cyprus</country>
+								</address>
+							</affiliation>
+						</author>
+						<author>
+							<persName><forename type="first">Simone</forename><surname>Bacchio</surname></persName>
+							<affiliation key="aff0">
+								<orgName type="department">Computation-based Science and Technology Research Center</orgName>
+								<orgName type="institution">The Cyprus Institute</orgName>
+								<address>
+									<country key="CY">Cyprus</country>
+								</address>
+							</affiliation>
+						</author>
+						<author>
+							<persName><forename type="first">Jacob</forename><surname>Finkenrath</surname></persName>
+							<affiliation key="aff0">
+								<orgName type="department">Computation-based Science and Technology Research Center</orgName>
+								<orgName type="institution">The Cyprus Institute</orgName>
+								<address>
+									<country key="CY">Cyprus</country>
+								</address>
+							</affiliation>
+						</author>
+						<author>
+							<affiliation key="aff1">
+								<orgName type="department">The 39th International Symposium on Lattice Field Theory</orgName>
+								<orgName type="institution">Rheinische Friedrich-Wilhelms-Universität Bonn</orgName>
+								<address>
+									<addrLine>8th-13th August</addrLine>
+									<postCode>2022</postCode>
+									<settlement>Bonn</settlement>
+									<country key="DE">Germany</country>
+								</address>
+							</affiliation>
+						</author>
+						<title level="a" type="main">Running HMC Simulation with Python via QUDA</title>
+					</analytic>
+					<monogr>
+						<imprint>
+							<date type="published" when="2022-12-13">13 Dec 2022</date>
+						</imprint>
+					</monogr>
+					<idno type="MD5">7D644971EE63B52EEEB0E371950E4226</idno>
+					<idno type="arXiv">arXiv:2212.06657v1[hep-lat]</idno>
+				</biblStruct>
+			</sourceDesc>
+		</fileDesc>
+		<encodingDesc>
+			<appInfo>
+				<application version="0.8.2" ident="GROBID" when="2026-02-27T02:44+0000">
+					<desc>GROBID - A machine learning software for extracting information from scholarly documents</desc>
+					<label type="revision">a91ee48</label>
+					<label type="parameters">startPage=-1, endPage=-1, consolidateCitations=0, consolidateHeader=0, consolidateFunders=0, includeRawAffiliations=false, includeRawCitations=false, includeRawCopyrights=false, generateTeiIds=false, generateTeiCoordinates=[], sentenceSegmentation=false, flavor=null</label>
+					<ref target="https://github.com/kermitt2/grobid"/>
+				</application>
+			</appInfo>
+		</encodingDesc>
+		<profileDesc>
+			<abstract>
+<div xmlns="http://www.tei-c.org/ns/1.0"><p>Lyncs-API is a Python API for Lattice QCD applications. It is designed as a Python toolkit that allows the user to use and run various lattice QCD libraries while programming in Python. The goal is to provide the user an easy programming experience without scarifying performance across multiple platforms, by preparing a common framework for various softwares for lattice QCD calculations. As such, it contains interfaces to, e.g., c-lime, DDalphaAMG, tmLQCD, and QUDA. In this proceeding, we focus on a Lyncs interface to QUDA, named Lyncs-QUDA, and present a small tutorial on how to use this Python interface to perform a HMC simulation using QUDA.</p></div>
+			</abstract>
+		</profileDesc>
+	</teiHeader>
+	<text xml:lang="en">
+		<body>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head n="1.">Introduction</head><p>Portability and productivity are new demands in High-Performance Computing (HPC) in addition to Performance, and lattice QCD applications are no exception. While performance has been sought for in those applications, portability and productivity have also become important factors. Lyncs-API is a response to those newly emerging trends and tries to achieve those three factors by developing a Python toolkit that allows the user to use and run various lattice QCD libraries while programming in Python <ref type="bibr" target="#b0">[1]</ref>. For this purpose, it uses a number of Python packages and aims at implementing Pyhton interfaces to various lattice QCD libraries. The structure of this API is shown schematically in Fig. <ref type="figure" target="#fig_0">1</ref>. In this work, we introduce a Python interface to one of the QCD libraries, namely QUDA, which is a library for performing calculations in lattice QCD on graphics processing units (GPU's) <ref type="bibr" target="#b1">[2]</ref>. The interface is available online at <ref type="url" target="https://github.com/Lyncs-API/lyncs.quda">https:  //github.com/Lyncs-API/lyncs.quda</ref>. It can be installed via pip from this GitHub repository. In the following, we outline how this interface is implemented, provide an example for how it can be used for pure-gauge HMC simulations, show what it produces, and analyze its performance.</p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head n="2.">Implementation</head><p>Lyncs-QUDA is designed to provide an intermediate layer of Python interface to QUDA. What this means is that the interface exposes methods and objects of QUDA by directly accessing them internally. This allows the user to program in Python while accessing to various QUDA objects and functionality. To achieve this, Lyncs-QUDA prepares wrapper classes for QUDA functions and objects while categorizing QUDA objects based on functionality.</p><p>These wrappers are contained in the wrapper scripts located in the directory lyncs_quda. Among them, a script, lib.py, contains a class on top of which all other classes are built. The class is named QudaLib, and its instance, lib. The lib object loads QUDA objects from the QUDA library and includes definitions from its header files using cppyy <ref type="bibr" target="#b2">[3]</ref>. Other classes access to QUDA objects through the lib object. To give an idea how this is done, we take gauge_field.py as an example to show how wrapper scripts are implemented. An excerpt of the version of the script used for this proceeding is found in Fig. <ref type="figure" target="#fig_1">2</ref>. The scripts can start with some auxiliary functions, which in case of the gauge_field.py are functions that return an instance of GaugeField class, which follows these auxiliary functions. This GaugeField class is the main object of this script. It is modeled after the corresponding QUDA class, quda::GaugeField, with additional capabilities. For instance, Python's GaugeField inherits from LatticeField class similarly to QUDA's GaugeField class and also offers some methods not found inside of quda::GaugeField such as those for computing various gauge actions and topological charges collected in this class. In principles, there is a corresponding Python class for each QUDA class. This Python GaugeField class stores the data field for a gauge field, represented either as a numpy or CuPy array. It also manages meta-data such as the dimensions of the lattice, internal degrees of freedom, the number of colors, and reconstruction type. To perform various operations through QUDA, it contains an instance of the quda::GaugeField class. This is created and returned as a shared pointer based on the meta-data of the Python GaugeField class, supplied to the Create method of the quda::GaugeField class in the form of quda::GaugeFieldParam. After the introduction of the corresponding QUDA object, the class definition offers various methods that rely on the QUDA object. In the simplest case, those methods call the associated QUDA methods either through the internal QUDA object or via Python's lib object introduced earlier. There are also other methods which combine several QUDA functions to perform more complicated tasks such as fermion force computation. This is a basic design pattern of the wrapper scripts of this interface.</p><p>On the GitHub page for this interface, there are also test and example scripts found in the respective directories. Test scripts are to be used with pytest and allow the user to check if those wrapper scripts work as expected. Example scripts show how these wrapper scripts can be used to solve practical problems. We use one of the example scripts, named hmc.py, to illustrate how this interface can be used by applying it to pure-gauge HMC simulations, which is detailed in the next section.</p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head n="3.">Example: pure-gauge HMC</head><p>Lyncs-QUDA greatly simplifies programs for calculations of lattice QCD quantities requiring GPU's. To illustrate it, we prepared a script for pure-gauge HMC simulations. As a brief reminder, HMC simulation is performed in the following steps. The steps from (2) to ( <ref type="formula">5</ref>) are iterated as many times as needed to produce a required number of gauge configurations.</p><p>To perform various tasks necessary to complete those steps, the HMC script is composed of several classes along with the usual main function. These classes are HMCHelper, Integrator, and HMC. Among those, the HMCHelper class does most of the work. It generates the initial gauge configuration for Step (1) as well as a random conjugate momentum field with Gaussian distribution at each start of the MD integration, computes gauge action and force, and updates the gauge field and momentum. The class, Integrator, uses this update method from the HMCHelper class to integrate over the MD trajectory. This Integrator class provides the user several options for integration methods such as leap frog, MN2, or OMF4 <ref type="bibr" target="#b3">[4]</ref><ref type="bibr" target="#b4">[5]</ref><ref type="bibr" target="#b5">[6]</ref>. The HMC class combines these two classes to make a single HMC step, i.e., from Step (2) to <ref type="bibr" target="#b4">(5)</ref>, and lastly, the main function does initialization of Lyncs-QUDA and QUDA and then uses HMC to repeat HMC steps as many times. As is mentioned, most of complicated tasks are performed by HMCHelper, which implements the core methods needed for HMC simulation. Figure <ref type="figure" target="#fig_3">3</ref> shows a snippet from the script. As Fig. <ref type="figure" target="#fig_3">3</ref> shows, however, the code for these methods looks fairly simple. All of the implementation details are hidden inside of a few calls of related Lyncs-QUDA objects. The user only needs to create relevant Lyncs-QUDA objects, and the required tasks are completed merely by calling methods of these Lyncs-QUDA objects. In this manner, this Python interface significantly simplifies programming and lets the user focus on solving the problem instead of implementation of low level functions. Furthermore, computationally intensive tasks are off-loaded to GPU's via QUDA while achieving programming simplicity at the same time.</p><p>The example script for HMC simulations can be run from the command line with additional command-line options in the following way: python examples/hmc.py -lattice-size 48 -beta 6.475.  Currently supported options are shown in Fig. <ref type="figure" target="#fig_4">4</ref>. This script can be used to generate gauge configurations on various lattice sizes using variable number of processes specified as a Cartesian topology. The user can change the value of β and select different integration methods, the number of time steps per MD trajectory, and the number of MD trajectories. We will add support for more options when the script grows into a programming suit of its own.</p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head n="4.">Results</head><p>In this section, we review the output of the HMC script and analyze the performance of the Lyncs-QUDA library.</p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head n="4.1">First Sanity Check</head><p>As the first sanity check, we have computed the value of average plaquette on each configuration generated by our HMC script and checked the thermalization process of the plaquette value. These tests are performed on several lattices with different dimensions and β values. Thermalized values are taken from Ref. <ref type="bibr" target="#b6">[7]</ref>. In Ref. <ref type="bibr" target="#b6">[7]</ref>, several observables are computed on various ensembles. Among those ensembles, we have selected four ensembles with different lattice dimensions and β values. They are listed in Table <ref type="table" target="#tab_0">1</ref>. Figure <ref type="figure" target="#fig_5">5</ref>   values on each ensemble. As is shown in the figure, our HMC script thermalizes the plaquette value to an appropriate thermealized value for each ensemble. This means that our script works as expected. We have also collected other metrics of the run such as system GPU and CPU memory usage per second, the value of the action, difference in the Hamiltonian on the current and proposed gauge configurations, and the exponent of the negative of the Hamiltonian at each HMC step. Other metrics can be collected upon needs of the user with a minor modification of the script. The collection and visualization of the metrics during the runs are done using an external Python package called "aim" <ref type="bibr" target="#b7">[8]</ref>. This package allows the script to track runs, log information, and easily visualize and analyze the collected data dynamically through a web browser. </p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head n="4.2">Profiling</head><p>In this section, we analyze the performance of our script. This analysis is done on a local machine, cyclamen, which is equipped with Intel®Xeon®Gold 6130 and two Nvidia's Tesla P100, located at The Cyprus Institute. The ensemble, D1d, with its lattice size of 48 4 was chosen. For profiling and visualization, we have used a Python module, cProfile to collect profiling data and an external package, SnakeViz for visualization and analysis <ref type="bibr" target="#b8">[9,</ref><ref type="bibr" target="#b9">10]</ref>. For this profiling, we have performed 100 HMC steps.</p><p>The breakdown of the overall performance is shown in Fig. <ref type="figure" target="#fig_6">6</ref>. As can be seen in the figure, the largest contributor to the overall cost is the QUDA kernel. This suggests most of the computation of the application program is handled by QUDA functions. The second largest contribution is from operations involving CuPy arrays, indicated by the label "cupy" in the pie chart. Lyncs-QUDA uses CuPy arrays to represent lattice fields on GPU's such as gauge fields and the conjugate momentum fields internally, and some operations on these fields such as the calculation of momentum norm are handled on the Python side, not through QUDA. As these operations are not directly related to the use of the Python interface but are part of the calculation for HMC simulation performed via CuPy, we separated its computational cost from the overhead due to usage of the Python interface and treat it in a similar manner to the computer time from QUDA kernels. The cost due to the use of Python interface, on the other hand, is about 1.2% of the total, which is marginal.</p><p>If we look more closely into the profiling result by breaking down the overall cost into the one from the setup phase and the other from repeating HMC steps, we find that the computer time for setup phase is 17.6s, which is about 4.1% of the total time of 421s. The pie chart for the setup phase is found in Fig. <ref type="figure" target="#fig_7">7a</ref>. Here again, the QUDA kernel occupies a major portion of the computer time, which is about 78.9%. Python accounts for 21.1%. The rest of the total computer time, which is about 95.8% of the total, is coming from repetition of the HMC steps. The pie chart for this phase can be found in Fig. <ref type="figure" target="#fig_7">7b</ref>. In this phase, we find that the overhead due to the usage of the Python interface is only about 0.3%, and it is very small for this particular run. Thus, most of the overhead of using the Python interface comes from the setup phase. As setup is done only once at the beginning of the simulation, and as HMC steps are repeated in a large number of times in a practical simulation, not just one hundred times for this test run. So the total overhead due to Python will be much smaller than shown in this example and will approach to 0.3% in production runs.</p><p>In Fig. <ref type="figure" target="#fig_7">7b</ref>, the inner pie chart shows the breakdown of the computer time from the QUDA kernel. As can be seen, the most computationally expensive part of the HMC steps is the computation of the gauge force for updating the gauge momentum. Other components of the HMC simulation is not as computationally demanding as the force calculation. Among those components, calculation of the gauge action dominated the computer time. Generation of the initial random gauge and random conjugate momentum at each step is similar in terms of the computational cost, and exponentiation of the gauge momentum to obtain a new gauge configuration made up of the smallest part in the QUDA kernel.</p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head n="4.3">Scaling</head><p>We have also preformed different scaling test. This was done on JUWELS Booster at Jülich Supercomputing Centre, which comes with AMD EPYC 7402 and four GPU's (NVIDIA A100 Tensor Core) <ref type="bibr" target="#b11">[12]</ref>. Figure <ref type="figure" target="#fig_8">8</ref> shows two benchmarks. Time per Molecular Dynamics Unit (MDU) as a function of the lattice spacing in the lattice unit, L a , is shown in Fig. <ref type="figure" target="#fig_8">8a</ref>. As can be observed, the time per MDU increases as a function of the lattice size. Figure <ref type="figure" target="#fig_8">8b</ref> shows the speedup of time per MDU with different number of GPU's used relative to the time with a single GPU, using a lattice of a fixed volume. The speedup falls off from the ideal scaling as the number of GPU's used increases.</p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head n="5.">Outlook</head><p>Lyncs-API is designed to achieve performance, portability, and productivity by providing Python interfaces to many already existing libraries for lattice QCD calculations in various languages. It is based on a number of other Python packages and implements extension to some of these to support implementation of the interfaces. Lyncs-QUDA is one of such interfaces, in particular to QUDA. Internally, it loads the QUDA library and uses it inside of various Python wrapper classes. These classes exposes a number of QUDA objects and functions to provide the user a wider access to QUDA capabilities.</p><p>The example script performing HMC simulation showed that Lyncs-QUDA simplifies programming considerably and lets the user focus on the problem instead of the implementation details, while incurring insignificant overhead. Also, being a Python interface, it is straightforward to utilize other Python modules or various external Python packages. For example, we have used cProfile and SnakeViz in our profiling and visualization as well as aim for analyzing the simulation runs. Scaling tests have also been conducted to see if the performance of our HMC script is reasonable, and the results confirm our expectation. This is a work in progress so that there are many features of QUDA that has not been incorporated into our interface. They include but not limited to supporting different fermion types such as staggered fermion, supporting QUDA's various compiler options, and updating the version of QUDA on which the Python interface is based.</p></div><figure xmlns="http://www.tei-c.org/ns/1.0" xml:id="fig_0"><head>Figure 1 :</head><label>1</label><figDesc>Figure 1: A schematic diagram showing how Lyncs-API is organized.</figDesc><graphic coords="2,172.84,247.23,249.60,169.20" type="bitmap" /></figure>
+<figure xmlns="http://www.tei-c.org/ns/1.0" xml:id="fig_1"><head>Figure 2 :</head><label>2</label><figDesc>Figure 2: A snapshot of a excerpt from gauge_field.py, showing how wrapper scripts are implemented.</figDesc><graphic coords="3,83.34,92.61,468.60,255.00" type="bitmap" /></figure>
+<figure xmlns="http://www.tei-c.org/ns/1.0" xml:id="fig_2"><head>1 .</head><label>1</label><figDesc>Pick an initial gauge configuration 2. Generate the conjugate momenta according to Gaussian distribution 3. Perform Molecular Dynamics (MD) integration 4. Accept/Reject a proposed configuration according to Metropolis criteria 5. Go back to<ref type="bibr" target="#b1">(2)</ref> </figDesc></figure>
+<figure xmlns="http://www.tei-c.org/ns/1.0" xml:id="fig_3"><head>Figure 3 :</head><label>3</label><figDesc>Figure 3: A snapshot of an excerpt from hmc.py located in examples directory of the GitHub page.</figDesc><graphic coords="5,187.24,92.61,220.80,206.40" type="bitmap" /></figure>
+<figure xmlns="http://www.tei-c.org/ns/1.0" xml:id="fig_4"><head>Figure 4 :</head><label>4</label><figDesc>Figure 4: Currently supported command-line options with help messages for the script.</figDesc><graphic coords="5,147.44,334.71,300.40,79.20" type="bitmap" /></figure>
+<figure xmlns="http://www.tei-c.org/ns/1.0" xml:id="fig_5"><head>Figure 5 :</head><label>5</label><figDesc>Figure 5: A plot of average plaquette values on each configuration. The dotted line corresponds to the values of the average plaquette on configurations generated by the HMC script, and the solid the thermalized average plaquette value taken from Ref. The dotted line and solid lines of the same color correspond to the same ensemble.</figDesc></figure>
+<figure xmlns="http://www.tei-c.org/ns/1.0" xml:id="fig_6"><head>Figure 6 :</head><label>6</label><figDesc>Figure 6: The pie chart showing the relative proportion of the total computer time from each sector.</figDesc></figure>
+<figure xmlns="http://www.tei-c.org/ns/1.0" xml:id="fig_7"><head>Figure 7 :</head><label>7</label><figDesc>Figure 7: The pie charts showing the relative proportion of the computer time divided into the setup phase and HMC simulation phase. The left plot is the pie chart showing the relative proportion of the computer time of the setup phase from each sector, and the right plot the pie chart showing the relative proportion of the computer time during HMC steps from each sector.</figDesc></figure>
+<figure xmlns="http://www.tei-c.org/ns/1.0" xml:id="fig_8"><head>Figure 8 :</head><label>8</label><figDesc>Figure 8: The plot of the time per MDU in seconds as a function of the lattice spacing in lattice units, a is shown on the left, and the plot showing speedup of the time per MDU with a different number of GPU's used relative to that of a single GPU on the right.</figDesc></figure>
+<figure xmlns="http://www.tei-c.org/ns/1.0" type="table" xml:id="tab_0"><head>Table 1 :</head><label>1</label><figDesc>shows how our HMC script thermalizes the plaquette Table of ensembles used for HMC simulation [7]. Parameter values relevant to computation of plaquette values are listed.</figDesc><table><row><cell>TAG</cell><cell>β</cell><cell>L/a T/a</cell></row><row><cell cols="3">A1a 5.789 16 16</cell></row><row><cell>B0a</cell><cell>6</cell><cell>24 24</cell></row><row><cell cols="3">C1d 6.136 32 64</cell></row><row><cell cols="3">D1d 6.475 48 48</cell></row></table></figure>
+		</body>
+		<back>
+
+			<div type="acknowledgement">
+<div><head>Acknowledgement</head><p>This project has received funding under <rs type="funder">PRACE</rs>-<rs type="grantNumber">6IP</rs>, Grant agreement ID: 823767, Project name: <rs type="person">LyNcs. LyNcs</rs> is one of 10 applications supported by <rs type="funder">PRACE-6IP</rs>, <rs type="grantNumber">WP8</rs> "<rs type="projectName">Forward Looking Software Solutions</rs>". S.Y., S.B. and J.F. have received funding under this project. The authors gratefully acknowledge the <rs type="funder">Gauss Centre for Supercomputing e.V.</rs> (<ref type="url" target="www.gauss-centre.eu">www.gauss-centre.eu</ref>) for funding computing time projects on the <rs type="institution" subtype="infrastructure">JSC supercomputer JUWELS Booster</rs> <ref type="bibr" target="#b11">[12]</ref>. We also thank the developers of the QUDA <ref type="bibr" target="#b1">[2]</ref> library for their continued support.</p></div>
+			</div>
+			<listOrg type="funding">
+				<org type="funding" xml:id="_cv87KsW">
+					<idno type="grant-number">6IP</idno>
+				</org>
+				<org type="funded-project" xml:id="_bV2yJ8V">
+					<idno type="grant-number">WP8</idno>
+					<orgName type="project" subtype="full">Forward Looking Software Solutions</orgName>
+				</org>
+			</listOrg>
+
+			<listOrg type="infrastructure">
+				<org type="infrastructure">					<orgName type="extracted">JSC supercomputer JUWELS Booster</orgName>
+				</org>
+			</listOrg>
+			<div type="references">
+
+				<listBibl>
+
+<biblStruct xml:id="b0">
+	<analytic>
+		<title level="a" type="main">Lyncs-API: a Python API for Lattice QCD applications</title>
+		<author>
+			<persName><forename type="first">S</forename><surname>Bacchio</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><surname>Finkenrath</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">C</forename><surname>Stylianou</surname></persName>
+		</author>
+		<idno type="DOI">10.22323/1.396.0542</idno>
+		<idno>2201.03873</idno>
+	</analytic>
+	<monogr>
+		<title level="j">PoS</title>
+		<imprint>
+			<biblScope unit="volume">2021</biblScope>
+			<biblScope unit="page">542</biblScope>
+			<date type="published" when="2022">2022</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b1">
+	<analytic>
+		<title level="a" type="main">Solving Lattice QCD systems of equations using mixed precision solvers on GPUs</title>
+		<author>
+			<persName><forename type="first">M</forename><forename type="middle">A</forename><surname>Clark</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">R</forename><surname>Babich</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">K</forename><surname>Barros</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">R</forename><forename type="middle">C</forename><surname>Brower</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">C</forename><surname>Rebbi</surname></persName>
+		</author>
+		<idno type="DOI">10.1016/j.cpc.2010.05.002</idno>
+	</analytic>
+	<monogr>
+		<title level="j">Comput. Phys. Commun</title>
+		<imprint>
+			<biblScope unit="volume">181</biblScope>
+			<biblScope unit="page">1517</biblScope>
+			<date type="published" when="2010">2010</date>
+		</imprint>
+	</monogr>
+	<note>0911.3191</note>
+</biblStruct>
+
+<biblStruct xml:id="b2">
+	<analytic>
+		<title level="a" type="main">High-performance python-c++ bindings with pypy and cling</title>
+		<author>
+			<persName><forename type="first">W</forename><forename type="middle">T</forename><surname>Lavrĳsen</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">A</forename><surname>Dutta</surname></persName>
+		</author>
+		<idno type="DOI">10.1109/PyHPC.2016.008</idno>
+	</analytic>
+	<monogr>
+		<title level="m">2016 6th Workshop on Python for High-Performance and Scientific Computing (PyHPC)</title>
+		<imprint>
+			<date type="published" when="2016">2016</date>
+			<biblScope unit="page" from="27" to="35" />
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b3">
+	<analytic>
+		<title level="a" type="main">Hamiltonian evolution for the hybrid Monte Carlo algorithm</title>
+		<author>
+			<persName><forename type="first">J</forename><forename type="middle">C</forename><surname>Sexton</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">D</forename><forename type="middle">H</forename><surname>Weingarten</surname></persName>
+		</author>
+		<idno type="DOI">10.1016/0550-3213(92)90263-B</idno>
+	</analytic>
+	<monogr>
+		<title level="j">Nucl. Phys. B</title>
+		<imprint>
+			<biblScope unit="volume">380</biblScope>
+			<biblScope unit="page">665</biblScope>
+			<date type="published" when="1992">1992</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b4">
+	<analytic>
+		<title level="a" type="main">Optimized Verlet-like algorithms for molecular dynamics simulations</title>
+		<author>
+			<persName><forename type="first">I</forename><forename type="middle">P</forename><surname>Omelyan</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">I</forename><forename type="middle">M</forename><surname>Mryglod</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">R</forename><surname>Folk</surname></persName>
+		</author>
+		<idno type="DOI">10.1103/PhysRevE.65.056706</idno>
+		<idno>cond-mat/0110438</idno>
+	</analytic>
+	<monogr>
+		<title level="j">Physical Review E</title>
+		<imprint>
+			<biblScope unit="volume">65</biblScope>
+			<biblScope unit="page">56706</biblScope>
+			<date type="published" when="2002">2002</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b5">
+	<analytic>
+		<title level="a" type="main">Testing and tuning new symplectic integrators for hybrid Monte Carlo algorithm in lattice QCD</title>
+		<author>
+			<persName><forename type="first">T</forename><surname>Takaishi</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">P</forename><surname>De Forcrand</surname></persName>
+		</author>
+		<idno type="DOI">10.1103/PhysRevE.73.036706</idno>
+		<idno>hep-lat/0505020</idno>
+	</analytic>
+	<monogr>
+		<title level="j">Phys. Rev. E</title>
+		<imprint>
+			<biblScope unit="volume">73</biblScope>
+			<biblScope unit="page">36706</biblScope>
+			<date type="published" when="2006">2006</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b6">
+	<analytic>
+		<title level="a" type="main">Critical slowing down and error analysis in lattice QCD simulations</title>
+		<author>
+			<persName><forename type="first">S</forename><surname>Schaefer</surname></persName>
+			<affiliation>
+				<orgName type="collaboration">ALPHA collaboration</orgName>
+			</affiliation>
+		</author>
+		<author>
+			<persName><forename type="first">R</forename><surname>Sommer</surname></persName>
+			<affiliation>
+				<orgName type="collaboration">ALPHA collaboration</orgName>
+			</affiliation>
+		</author>
+		<author>
+			<persName><forename type="first">F</forename><surname>Virotta</surname></persName>
+			<affiliation>
+				<orgName type="collaboration">ALPHA collaboration</orgName>
+			</affiliation>
+		</author>
+		<idno type="DOI">10.1016/j.nuclphysb.2010.11.020</idno>
+		<idno>1009.5228</idno>
+	</analytic>
+	<monogr>
+		<title level="j">Nucl. Phys. B</title>
+		<imprint>
+			<biblScope unit="volume">845</biblScope>
+			<biblScope unit="page">93</biblScope>
+			<date type="published" when="2011">2011</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b7">
+	<monogr>
+		<title level="m" type="main">Soghomonyan and The Aim team, Aim, 6</title>
+		<author>
+			<persName><forename type="first">G</forename><surname>Arakelyan</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">G</forename></persName>
+		</author>
+		<idno type="DOI">10.5281/zenodo.6536395</idno>
+		<imprint>
+			<date type="published" when="2020">2020</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b8">
+	<monogr>
+		<title/>
+		<author>
+			<persName><forename type="first">M</forename><surname>Davis</surname></persName>
+		</author>
+		<imprint>
+			<date type="published" when="2021">SnakeViz, 10, 2021</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b9">
+	<analytic>
+		<title level="a" type="main">Python 3 Reference Manual</title>
+		<author>
+			<persName><forename type="first">G</forename><surname>Van Rossum</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">F</forename><forename type="middle">L</forename><surname>Drake</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">CreateSpace</title>
+		<imprint>
+			<date type="published" when="2009">2009</date>
+			<pubPlace>Scotts Valley, CA</pubPlace>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b10">
+	<analytic>
+		<title level="a" type="main">Cupy: A numpy-compatible library for nvidia gpu calculations</title>
+		<author>
+			<persName><forename type="first">R</forename><surname>Okuta</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">Y</forename><surname>Unno</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">D</forename><surname>Nishino</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">S</forename><surname>Hido</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">C</forename><surname>Loomis</surname></persName>
+		</author>
+		<ptr target="http://learningsys.org/nips17/assets/papers/paper_16.pdf" />
+	</analytic>
+	<monogr>
+		<title level="m">Proceedings of Workshop on Machine Learning Systems (LearningSys) in The Thirty-first Annual Conference on Neural Information Processing Systems (NIPS)</title>
+		<meeting>Workshop on Machine Learning Systems (LearningSys) in The Thirty-first Annual Conference on Neural Information Processing Systems (NIPS)</meeting>
+		<imprint>
+			<date type="published" when="2017">2017</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b11">
+	<analytic>
+		<title level="a" type="main">Juwels: Modular tier-0/1 supercomputer at the jülich supercomputing centre</title>
+		<author>
+			<persName><forename type="first">D</forename><surname>Krause</surname></persName>
+		</author>
+		<idno type="DOI">10.17815/jlsrf-5-171</idno>
+	</analytic>
+	<monogr>
+		<title level="j">JLSRF</title>
+		<imprint>
+			<biblScope unit="volume">5</biblScope>
+			<biblScope unit="page">135</biblScope>
+			<date type="published" when="2019">2019</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+				</listBibl>
+			</div>
+		</back>
+	</text>
+</TEI>
