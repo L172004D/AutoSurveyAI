@@ -4,6 +4,7 @@ import faiss
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from parse import parse_tei_xml
+from evaluation import evaluate_embeddings   # ✅ NEW IMPORT
 
 # -------------------------
 # CONFIG
@@ -23,7 +24,7 @@ model = SentenceTransformer(MODEL_NAME)
 # TITLE
 # -------------------------
 st.title("📚 AI Research Paper Semantic Search Engine")
-st.markdown("Upload → Extract → Index → Search Across Multiple Papers")
+st.markdown("Upload → Extract → Index → Search → Evaluate")
 
 st.divider()
 
@@ -60,6 +61,9 @@ def load_all_sections():
     all_sections = []
     section_sources = []
 
+    if not os.path.exists(XML_FOLDER):
+        return all_sections, section_sources
+
     for file in os.listdir(XML_FOLDER):
         if file.endswith(".xml"):
             xml_path = os.path.join(XML_FOLDER, file)
@@ -87,30 +91,55 @@ if query:
     else:
         st.info("Searching...")
 
-        # Load index
         index = faiss.read_index(INDEX_PATH)
-
-        # Load sections
         sections, sources = load_all_sections()
 
-        # Embed query
-        query_embedding = model.encode([query])
-        D, I = index.search(np.array(query_embedding), k=5)
+        if len(sections) == 0:
+            st.warning("No sections found.")
+        else:
+            query_embedding = model.encode([query])
+            D, I = index.search(np.array(query_embedding), k=5)
 
-        st.subheader("Top Matching Results")
+            st.subheader("Top Matching Results")
 
-        for rank, idx in enumerate(I[0]):
-            if idx < len(sections):
+            for rank, idx in enumerate(I[0]):
+                if idx < len(sections):
 
-                score = 1 - D[0][rank]  # similarity score
-                paper_name = sources[idx]
-                section_text = sections[idx]
+                    score = 1 - D[0][rank]
+                    paper_name = sources[idx]
+                    section_text = sections[idx]
 
-                st.markdown("---")
-                st.markdown(f"### 📄 Paper: {paper_name}")
-                st.markdown(f"**Similarity Score:** {score:.4f}")
-                st.write(section_text[:1000])
+                    st.markdown("---")
+                    st.markdown(f"### 📄 Paper: {paper_name}")
+                    st.markdown(f"**Similarity Score:** {score:.4f}")
+                    st.write(section_text[:1000])
 
 st.divider()
 
-st.markdown("Built with ❤️ using GROBID + FAISS + SentenceTransformers")
+# -------------------------
+# EVALUATION SECTION
+# -------------------------
+st.header("📊 System Evaluation Metrics")
+
+if st.button("Run Evaluation Metrics"):
+
+    if not os.path.exists(INDEX_PATH):
+        st.error("Please process and index papers first.")
+    else:
+        sections, _ = load_all_sections()
+
+        if len(sections) < 2:
+            st.warning("Not enough sections for evaluation.")
+        else:
+            st.info("Evaluating embedding quality using SciBERT...")
+
+            metrics = evaluate_embeddings(sections)
+
+            st.subheader("SciBERT Metrics")
+
+            for key, value in metrics.items():
+                st.write(f"{key}: {value:.4f}")
+
+st.divider()
+
+st.markdown("Built with ❤️ using GROBID + FAISS + SentenceTransformers + SciBERT")
