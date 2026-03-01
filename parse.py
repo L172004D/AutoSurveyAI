@@ -1,7 +1,7 @@
 from lxml import etree
 import json
 
-def parse_grobid_xml(xml_path):
+def parse_tei_xml(xml_path):
     tree = etree.parse(xml_path)
     root = tree.getroot()
 

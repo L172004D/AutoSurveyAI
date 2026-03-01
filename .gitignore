@@ -1,0 +1,6 @@
+__pycache__/
+grobid_output/
+research_index.faiss
+*.pdf
+*.xml
+.env

@@ -1,30 +1,26 @@
-import requests
 import os
+from grobid_client.grobid_client import GrobidClient
 
-def extract_structured(pdf_path):
-    url = "http://localhost:8070/api/processFulltextDocument"
+# Connect to running GROBID server
+client = GrobidClient(config_path=None)
 
-    with open(pdf_path, 'rb') as pdf_file:
-        files = {
-            'input': (os.path.basename(pdf_path), pdf_file, 'application/pdf')
-        }
 
-        response = requests.post(url, files=files)
+def process_pdf_folder(pdf_folder=".", output_folder="grobid_output"):
 
-    if response.status_code == 200:
-        os.makedirs("grobid_output", exist_ok=True)
+    # Create output folder if not exists
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
 
-        output_path = os.path.join(
-            "grobid_output",
-            os.path.basename(pdf_path).replace(".pdf", ".tei.xml")
-        )
+    for file in os.listdir(pdf_folder):
+        if file.endswith(".pdf"):
+            pdf_path = os.path.join(pdf_folder, file)
+            print(f"Processing {file}...")
 
-        with open(output_path, "wb") as f:
-            f.write(response.content)
+            client.process(
+                "processFullTextDocument",
+                pdf_path,
+                output=output_folder,
+                consolidate_header=True
+            )
 
-        print("Processing completed successfully.")
-        return output_path
-
-    else:
-        print("Error:", response.status_code)
-        return None
+    print("All PDFs processed successfully.")

@@ -1,0 +1,6 @@
+streamlit
+sentence-transformers
+faiss-cpu
+lxml
+grobid-client==0.8.0
+numpy
